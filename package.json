@@ -1,11 +1,12 @@
 {
   "name": "next-ssr-essentials",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Includes helpers and higher order components useful in next environment.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "yarn build"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "@types/node": "^22.13.8",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "tsup": "^8.4.0",
     "typescript": "^5.8.2"
   },
   "publishConfig": {
