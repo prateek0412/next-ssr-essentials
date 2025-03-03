@@ -7,9 +7,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { debounce } from "./utils/utility-functions";
-import LinearLoader from "./loaders/linear-loader";
-
 export interface KeyedItem {
   id: string | number;
 }
@@ -32,11 +29,24 @@ interface InfiniteConversationScrollProps<T extends KeyedItem> {
   getItemsOnMount: APIType;
   getItemsOnScrollToOlder: APIType;
   getItemsOnScrollToNewer?: APIType;
+  onLoadingStateChange?: (isLoading: boolean) => void;
 }
 
 export const InfiniteConversationScroll = <T extends KeyedItem>(
   props: InfiniteConversationScrollProps<T>
 ) => {
+  const scrollContainerStyles: React.CSSProperties = {
+    height: "100%",
+    overflowY: "scroll",
+    padding: "10px",
+    minWidth: "20rem",
+    width: "100%",
+    display: "flex",
+    paddingBottom: "2rem",
+    flexDirection: "column",
+    flexGrow: 1,
+    ...props.scrollContainerStyles,
+  };
   const [savedPages, setSavedPages] = useState<Set<number | string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomTestRefStick = useRef<HTMLDivElement>(null);
@@ -44,7 +54,7 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
   const [currOldestPage, setCurrOldestPage] = useState<number | null>(null);
   const [lastStickTop, setLastStickTop] = useState<number | null>(null);
   const [onMountApiRunning, setOnMountApiRunning] = useState(true);
-  const [isGetmoreItemsApiRunning, setIsGermoreItemsApiRunning] =
+  const [isGetmoreItemsApiRunning, setIsGetmoreItemsApiRunning] =
     useState(false);
   const [items, setItems] = useState<T[]>([]);
 
@@ -58,7 +68,6 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
         return res.json();
       })
       .then((data: Array<any>) => {
-        console.log("data", data);
         setCurrOldestPage(data[0].page);
         setSavedPages((prev) => {
           const newSet = new Set(prev);
@@ -86,13 +95,12 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
 
   const getMoreItems = (curOldestPage: string) => {
     const { endPoint } = props.getItemsOnScrollToOlder;
-    setIsGermoreItemsApiRunning(true);
+    setIsGetmoreItemsApiRunning(true);
     fetch(`${endPoint}${curOldestPage}`)
       .then((res) => {
         return res.json();
       })
       .then((data) => {
-        console.log("data", data);
         setLastStickTop(
           bottomTestRefStick.current?.getBoundingClientRect().top ?? null
         );
@@ -101,14 +109,14 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
         setSavedPages((prev) => new Set([...prev, data.page]));
       })
       .finally(() => {
-        setIsGermoreItemsApiRunning(false);
+        setIsGetmoreItemsApiRunning(false);
       });
   };
 
   const addItemsOnTop = () => {
     setSavedPages((prev) => {
       setCurrOldestPage((incOldestPage) => {
-        setIsGermoreItemsApiRunning((incApiRunningState) => {
+        setIsGetmoreItemsApiRunning((incApiRunningState) => {
           if (
             !incApiRunningState &&
             incOldestPage != null &&
@@ -156,7 +164,6 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
   }, [items, lastStickTop]);
 
   const handlePrevThreadFetching = () => {
-    console.log("scroll top:", containerRef.current?.scrollTop);
     addItemsOnTop();
   };
 
@@ -206,10 +213,6 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
     }
   };
 
-  useEffect(() => {
-    console.log("savedPages", savedPages);
-  }, [savedPages, currOldestPage]);
-
   useLayoutEffect(() => {
     const scrollboxHeight = containerRef?.current?.scrollHeight;
     if (
@@ -222,30 +225,52 @@ export const InfiniteConversationScroll = <T extends KeyedItem>(
     }
   }, [hasInitialItemsRendered]);
 
-  return (
-    <>
-      {onMountApiRunning || isGetmoreItemsApiRunning ? (
-        <div className="min-h-[1px] relative">
-          <LinearLoader />
-        </div>
-      ) : null}
+  useEffect(() => {
+    props.onLoadingStateChange?.(onMountApiRunning);
+  }, [onMountApiRunning]);
 
+  useEffect(() => {
+    props.onLoadingStateChange?.(isGetmoreItemsApiRunning);
+  }, [isGetmoreItemsApiRunning]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={scrollContainerStyles}
+      onScroll={handleScroll}
+    >
+      {items.map((item) => {
+        return props.renderItem({ item: item });
+      })}
       <div
-        id={"box"}
-        ref={containerRef}
-        style={props.scrollContainerStyles}
-        onScroll={handleScroll}
-      >
-        {items.map((item) => {
-          return props.renderItem({ item: item });
-        })}
-        <div
-          id={"stick"}
-          ref={bottomTestRefStick}
-          className="w-full"
-          style={{ visibility: "hidden" }}
-        />
-      </div>
-    </>
+        ref={bottomTestRefStick}
+        style={{ visibility: "hidden", width: "100%" }}
+      />
+    </div>
   );
 };
+
+const debounce = (
+  func: Function,
+  delay: number = 300,
+  triggerFirstCall = false
+) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  let iCount = 0;
+  return function (this: any, ...args: any[]) {
+    const context = this;
+    const [value] = args;
+    if (triggerFirstCall && iCount === 0) {
+      func.apply(context, [value]);
+    }
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      if (!triggerFirstCall) {
+        func.apply(context, [value]);
+      }
+      iCount = 0;
+    }, delay);
+    iCount++;
+  };
+};
+
