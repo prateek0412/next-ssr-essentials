@@ -1,6 +1,6 @@
 {
   "name": "next-ssr-essentials",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simple infinite scrolling component for Next.js apps",
   "main": "dist/infinite-conversation-scroll.js",
   "types": "dist/infinite-conversation-scroll.d.ts",
