@@ -1,0 +1,43 @@
+{
+  "name": "next-ssr-essentials",
+  "version": "1.0.7",
+  "description": "Includes helpers and higher order components useful in next environment.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prateek3065/next-ssr-essentials.git"
+  },
+  "keywords": [
+    "nextjs",
+    "next",
+    "ssr",
+    "infinite",
+    "scroll",
+    "debounce",
+    "skeleton",
+    "loader",
+    "animation",
+    "server",
+    "side",
+    "rendering"
+  ],
+  "author": "Prateek Sharma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/prateek3065/next-ssr-essentials/issues"
+  },
+  "homepage": "https://github.com/prateek3065/next-ssr-essentials#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.8",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^5.8.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
